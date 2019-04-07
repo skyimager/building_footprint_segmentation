@@ -1,14 +1,14 @@
 
 dataset_path = "data/datasets/AerialImageDataset/train"
-exp_name = "inria_pspnet"
+exp_name = "inria_linknet"
 
-tile_size = 256
+tile_size = 512
 down_sampling = 2.0
-no_of_gpu = 2
+no_of_gpu = 1
 batch_size = 12*no_of_gpu #has to be even no.
 
 no_of_samples = 700 #no_of_samples_perunit for inria
-perce_aoi_touse = 1.0 #decides the no of aois to use for training and validation.
+perce_aoi_touse = 0.1 #decides the no of aois to use for training and validation.
 #class_weight = {0: 1.0, 1: 1.0}  #0 :Background, 1 : Building
 
 epochs = 30
@@ -26,7 +26,7 @@ transfer_lr = False
 trial = False
 
 if training_frm_scratch:
-    model = 'pspnet' #used for importing from src networks
+    model = 'linknet' #used for importing from src networks
     initial_epoch = 0
     optimiser = 'sgd'  #enter everything in small letters
     loss = 'bce_dice'
@@ -39,10 +39,10 @@ if training_frm_chkpt:
 
 if transfer_lr:
     model_path = "path/to/checkpoint-10-0.90.h5"
-    model = "pspnet"
+    model = "linknet"
     initial_epoch = 0
 
-    trainable_layers =  list(range(104)) #complete architecture for safenet
+    trainable_layers =  list(range(104)) #complete architecture
 
     optimiser = 'sgd'  #enter everything in small letters
     loss = 'bce_dice'

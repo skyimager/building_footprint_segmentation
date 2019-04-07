@@ -13,6 +13,7 @@ Building Footprint Segmentation from Satellite images
 bfss
   ├── train.py
   ├── config.py
+  ├── evaluate.py
   ├── src  
   |   ├── training/
   |   ├── evaluation/
@@ -42,6 +43,9 @@ Step 3: ```conda activate bfss``` #activate the virtual env.
 ## 3. Project description
 The training script is `train.py` <br>
 The entire training configuration including the dataset path, hyper-parameters and other arguments are specified in `config.py`, which you can modify and experiment with.
+
+A Notebook has been created for explaining the different training steps:
+Jupyter-notebook [LINK](./notebook/training.ipynb)
 
 <a name="to-do"></a>
 ## 4. To-Do
