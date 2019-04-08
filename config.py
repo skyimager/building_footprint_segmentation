@@ -37,6 +37,17 @@ if training_frm_chkpt:
     initial_epoch = 10 #training starts from 'initial epoch + 1'
     model_path = "path/to/checkpoint-10-0.90.h5"
 
+if fine_tuning:
+   model = "newmodel"
+   weights_path="data/pretrained/newmodel/checkpoint-newmodel.h5"
+
+   initial_epoch = 0
+
+   optimiser = 'sgd'  #enter everything in small letters
+   loss = 'wbce_dice'
+   metric = 'dice'
+   learning_rate = 0.0001
+
 if transfer_lr:
     model_path = "path/to/checkpoint-10-0.90.h5"
     model = "linknet"
