@@ -34,7 +34,7 @@ if __name__ == "__main__":
     exp_name = config.exp_name
 
     train, val, test = data_loader.get_samples(dataset_path)
-    
+
     print("\nPreparing dataset for Training")
     X_train, y_train = data_loader.build_source(train, dataset_path)
 
@@ -51,27 +51,28 @@ if __name__ == "__main__":
     initial_epoch = config.initial_epoch
 
     loss_class = {'bin_cross': 'binary_crossentropy',
-                  'bce_dice': bce_dice_loss}
-        
+                  'bce_dice': bce_dice_loss,
+                 'wbce_dice': wbce_dice_loss}
+
     metric_class = {'dice':dice_coeff}
-        
-    optimiser_class = {'adam': (Adam, {}), 
-                       'nadam': (Nadam, {}), 
+
+    optimiser_class = {'adam': (Adam, {}),
+                       'nadam': (Nadam, {}),
                        'rmsprop': (RMSprop, {}),
-                       'sgd':(SGD, {'decay':1e-6, 'momentum':0.90, 'nesterov':True})} 
-    
+                       'sgd':(SGD, {'decay':1e-6, 'momentum':0.90, 'nesterov':True})}
+
     training_frm_scratch = config.training_frm_scratch
     training_frm_chkpt = config.training_frm_chkpt
     transfer_lr = config.transfer_lr
 
-    if sum((training_frm_scratch, training_frm_chkpt, transfer_lr)) != 1:
+    if sum((training_frm_scratch, training_frm_chkpt, fine_tuning, transfer_lr)) != 1:
         raise Exception("Conflicting training modes")
-    
+
     #spe = Steps per epoch
     train_spe = int(np.floor((len(X_train)*no_of_samples*2) / batch_size)) # factor of 2 bcos of Augmentation
     val_spe = int(np.floor((len(X_val)*no_of_samples) / batch_size))
 
-        
+
     # Initialise generators
     train_generator = SegDataGenerator(dataset_path, img_source=X_train,
                                     mask_source=y_train, batch_size= batch_size,
@@ -85,10 +86,13 @@ if __name__ == "__main__":
 
     if training_frm_scratch:
         model, gpu_model = training_scratch(optimiser_class, loss_class, metric_class)
-                
+
     elif training_frm_chkpt:
         model, gpu_model = training_checkpoint()
-        
+
+    elif fine_tuning:
+        model, gpu_model = fine_tune(optimiser_class, loss_class, metric_class)
+
     elif transfer_lr:
         model, gpu_model = transfer_learning(optimiser_class, loss_class, metric_class)
 
@@ -97,14 +101,14 @@ if __name__ == "__main__":
     trainable_count = int(np.sum([K.count_params(p) for p in set(model.trainable_weights)]))
     non_trainable_count = int(np.sum([K.count_params(p) for p in set(model.non_trainable_weights)]))
     params = (trainable_count + non_trainable_count,trainable_count, non_trainable_count)
-    
+
     print('Total params: {:,}'.format(params[0]))
     print('Trainable params: {:,}'.format(params[1]))
     print('Non-trainable params: {:,}'.format(params[2]))
-    
+
     #Set callbacks
     callbacks_list = get_callbacks(model)
-        
+
     # Start/resume training
     if config.no_of_gpu > 1:
         history = gpu_model.fit_generator(steps_per_epoch= train_spe,
@@ -114,7 +118,7 @@ if __name__ == "__main__":
                                           validation_steps = val_spe,
                                           initial_epoch = initial_epoch,
                                           callbacks = callbacks_list)
-        
+
     else:
         history = model.fit_generator(steps_per_epoch= train_spe,
                                   generator=train_generator,
@@ -123,7 +127,7 @@ if __name__ == "__main__":
                                   validation_steps = val_spe,
                                   initial_epoch = initial_epoch,
                                   callbacks = callbacks_list)
-    
+
     #Save final complete model
     filename = "model_ep_"+str(int(epochs))+"_batch_"+str(int(batch_size))
     model.save("./data/"+exp_name+"/"+filename+".h5")
